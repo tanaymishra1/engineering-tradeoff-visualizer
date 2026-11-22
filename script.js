@@ -17,15 +17,11 @@ const ctx = canvas.getContext("2d");
 const designList = document.getElementById("designList");
 let savedDesigns = [];
 
-
-
 function updateValues() {
     document.getElementById("speedVal").textContent = speed.value;
     document.getElementById("torqueVal").textContent = torque.value;
     document.getElementById("costVal").textContent = cost.value;
 }
-
-
 
 function getWeights() {
     const s = Number(speedP.value);
@@ -56,10 +52,8 @@ function getWeights() {
     };
 }
 
-
-
 function calculate() {
-    // ALWAYS redraw bars
+    // redraw chart
     drawChart();
 
     const weights = getWeights();
@@ -98,8 +92,6 @@ function calculate() {
         focusOut.textContent = "Balanced";
 }
 
-
-
 function drawChart() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -116,15 +108,23 @@ function drawChart() {
     });
 }
 
-
 document.getElementById("saveBtn").addEventListener("click", () => {
-    const name =
-        document.getElementById("designName").value || "Unnamed Design";
+    const score = Number(scoreOut.textContent);
 
-    savedDesigns.push({
-        name,
-        score: scoreOut.textContent
-    });
+    // invalid priorities
+    if (Number.isNaN(score)) {
+        statusOut.textContent = "Fix the priorities before saving a design";
+        statusOut.style.color = "red";
+        return;
+    }
+
+    const name =
+        document.getElementById("designName").value.trim() || "Unnamed Design";
+
+    savedDesigns.push({ name, score });
+
+    // rank designs
+    savedDesigns.sort((a, b) => b.score - a.score);
 
     renderSaved();
 });
@@ -134,12 +134,15 @@ function renderSaved() {
     savedDesigns.forEach((d, i) => {
         const div = document.createElement("div");
         div.className = "design-card";
-        div.innerHTML = `<strong>${i + 1}. ${d.name}</strong><br>Score: ${d.score}`;
+
+        // plain text
+        const title = document.createElement("strong");
+        title.textContent = `${i + 1}. ${d.name}`;
+
+        div.append(title, document.createElement("br"), `Score: ${d.score.toFixed(2)}`);
         designList.appendChild(div);
     });
 }
-
-
 
 [speed, torque, cost, speedP, torqueP, costP].forEach(el =>
     el.addEventListener("input", () => {
