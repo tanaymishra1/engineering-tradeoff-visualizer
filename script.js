@@ -36,8 +36,9 @@ function getWeights() {
 
     const total = s + t + c;
 
-    if (total !== 100) {
-        statusOut.textContent = `Priority total must equal 100 (Current: ${total})`;
+    // float tolerance
+    if (Math.abs(total - 100) > 0.01) {
+        statusOut.textContent = `Priority total must equal 100 (Current: ${Number(total.toFixed(2))})`;
         statusOut.style.color = "red";
         return null;
     }
@@ -92,19 +93,40 @@ function calculate() {
         focusOut.textContent = "Balanced";
 }
 
+function resizeCanvas() {
+    // sharp screens
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth;
+    const height = width / 2;
+
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
 function drawChart() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    ctx.clearRect(0, 0, w, h);
 
     const values = [speed.value, torque.value, cost.value];
     const labels = ["Speed", "Torque", "Cost"];
     const colors = ["#0077b6", "#00b4d8", "#adb5bd"];
 
+    const base = h - 40;
+    const unit = (h - 100) / 10;
+    const barWidth = w / 8;
+
+    ctx.textAlign = "center";
     values.forEach((v, i) => {
+        const center = w * (0.3 + i * 0.2);
+
         ctx.fillStyle = colors[i];
-        ctx.fillRect(140 + i * 120, 260 - v * 20, 70, v * 20);
+        ctx.fillRect(center - barWidth / 2, base - v * unit, barWidth, v * unit);
 
         ctx.fillStyle = "#000";
-        ctx.fillText(labels[i], 155 + i * 120, 285);
+        ctx.fillText(labels[i], center, base + 25);
     });
 }
 
@@ -151,5 +173,11 @@ function renderSaved() {
     })
 );
 
+window.addEventListener("resize", () => {
+    resizeCanvas();
+    drawChart();
+});
+
+resizeCanvas();
 updateValues();
 calculate();
