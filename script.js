@@ -36,8 +36,9 @@ function getWeights() {
 
     const total = s + t + c;
 
-    if (total !== 100) {
-        statusOut.textContent = `Priority total must equal 100 (Current: ${total})`;
+    // float tolerance
+    if (Math.abs(total - 100) > 0.01) {
+        statusOut.textContent = `Priority total must equal 100 (Current: ${Number(total.toFixed(2))})`;
         statusOut.style.color = "red";
         return null;
     }
