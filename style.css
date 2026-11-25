@@ -36,15 +36,6 @@ input[type="text"] {
     margin-bottom: 15px;
 }
 
-.sliders {
-    width: 60%;
-}
-
-.sliders input {
-    width: 100%;
-    margin-bottom: 15px;
-}
-
 .priority-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
