@@ -54,23 +54,25 @@ function getWeights() {
 }
 
 function calculate() {
-    // redraw chart
-    drawChart();
-
     const weights = getWeights();
     if (!weights) {
+        drawChart(null);
         scoreOut.textContent = "—";
         evalOut.textContent = "Fix priority inputs to evaluate";
         focusOut.textContent = "—";
         return;
     }
 
-    let score =
-        speed.value * weights.speed +
-        torque.value * weights.torque -
-        cost.value * weights.cost;
+    const parts = [
+        { label: "Speed", value: speed.value * weights.speed, color: "#0077b6" },
+        { label: "Torque", value: torque.value * weights.torque, color: "#00b4d8" },
+        { label: "Cost", value: -cost.value * weights.cost, color: "#adb5bd" },
+        // torque penalty
+        { label: "Penalty", value: torque.value < 5 ? -1 : 0, color: "#d62828" }
+    ];
+    const score = parts.reduce((sum, part) => sum + part.value, 0);
 
-    if (torque.value < 5) score -= 1;
+    drawChart([...parts, { label: "Score", value: score, color: "#1b263b" }]);
 
     scoreOut.textContent = score.toFixed(2);
 
@@ -105,28 +107,41 @@ function resizeCanvas() {
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
 
-function drawChart() {
+function drawChart(parts) {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     ctx.clearRect(0, 0, w, h);
-
-    const values = [speed.value, torque.value, cost.value];
-    const labels = ["Speed", "Torque", "Cost"];
-    const colors = ["#0077b6", "#00b4d8", "#adb5bd"];
-
-    const base = h - 40;
-    const unit = (h - 100) / 10;
-    const barWidth = w / 8;
-
     ctx.textAlign = "center";
-    values.forEach((v, i) => {
-        const center = w * (0.3 + i * 0.2);
+    ctx.font = "12px Arial";
 
-        ctx.fillStyle = colors[i];
-        ctx.fillRect(center - barWidth / 2, base - v * unit, barWidth, v * unit);
+    if (!parts) {
+        ctx.fillStyle = "#555";
+        ctx.fillText("Fix the priorities to see the chart", w / 2, h / 2);
+        return;
+    }
+
+    const zero = h * 0.42;
+    const unit = (h * 0.3) / 10;
+    const barWidth = w / 10;
+
+    // zero line
+    ctx.strokeStyle = "#999";
+    ctx.beginPath();
+    ctx.moveTo(w * 0.05, zero);
+    ctx.lineTo(w * 0.95, zero);
+    ctx.stroke();
+
+    parts.forEach((part, i) => {
+        const center = w * (0.15 + i * 0.175);
+        const height = part.value * unit;
+
+        ctx.fillStyle = part.color;
+        ctx.fillRect(center - barWidth / 2, zero - Math.max(height, 0), barWidth, Math.abs(height));
 
         ctx.fillStyle = "#000";
-        ctx.fillText(labels[i], center, base + 25);
+        const valueY = part.value >= 0 ? zero - height - 6 : zero - height + 14;
+        ctx.fillText(part.value.toFixed(2), center, valueY);
+        ctx.fillText(part.label, center, h - 6);
     });
 }
 
@@ -175,7 +190,7 @@ function renderSaved() {
 
 window.addEventListener("resize", () => {
     resizeCanvas();
-    drawChart();
+    calculate();
 });
 
 resizeCanvas();
