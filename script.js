@@ -85,14 +85,19 @@ function calculate() {
     else
         evalOut.textContent = "Not optimal";
 
-    if (weights.speed > weights.torque && weights.speed > weights.cost)
-        focusOut.textContent = "Speed-prioritized";
-    else if (weights.torque > weights.speed && weights.torque > weights.cost)
-        focusOut.textContent = "Torque-prioritized";
-    else if (weights.cost > weights.speed && weights.cost > weights.torque)
-        focusOut.textContent = "Cost-prioritized";
+    // python rule
+    const speedRating = Number(speed.value);
+    const torqueRating = Number(torque.value);
+    const costRating = Number(cost.value);
+
+    if (speedRating > torqueRating && speedRating > costRating)
+        focusOut.textContent = "Performance-focused (speed-driven)";
+    else if (torqueRating > speedRating && torqueRating > costRating)
+        focusOut.textContent = "Power-focused (torque-driven)";
+    else if (costRating < speedRating && costRating < torqueRating)
+        focusOut.textContent = "Cost-efficient";
     else
-        focusOut.textContent = "Balanced";
+        focusOut.textContent = "Balanced properties";
 }
 
 function resizeCanvas() {
