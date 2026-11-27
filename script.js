@@ -16,6 +16,7 @@ const ctx = canvas.getContext("2d");
 
 const designList = document.getElementById("designList");
 let savedDesigns = [];
+let lastResult = null;
 
 function updateValues() {
     document.getElementById("speedVal").textContent = speed.value;
@@ -56,6 +57,7 @@ function getWeights() {
 function calculate() {
     const weights = getWeights();
     if (!weights) {
+        lastResult = null;
         drawChart(null);
         scoreOut.textContent = "—";
         evalOut.textContent = "Fix priority inputs to evaluate";
@@ -69,6 +71,7 @@ function calculate() {
         Number(cost.value),
         weights
     );
+    lastResult = result;
 
     drawChart([
         { label: "Speed", value: result.parts.speed, color: "#0077b6" },
@@ -134,10 +137,8 @@ function drawChart(parts) {
 }
 
 document.getElementById("saveBtn").addEventListener("click", () => {
-    const score = Number(scoreOut.textContent);
-
     // invalid priorities
-    if (Number.isNaN(score)) {
+    if (!lastResult) {
         statusOut.textContent = "Fix the priorities before saving a design";
         statusOut.style.color = "red";
         return;
@@ -146,8 +147,7 @@ document.getElementById("saveBtn").addEventListener("click", () => {
     const name =
         document.getElementById("designName").value.trim() || "Unnamed Design";
 
-    const passes = Number(torque.value) >= MIN_TORQUE;
-    savedDesigns.push({ name, score, passes });
+    savedDesigns.push({ name, score: lastResult.score, passes: lastResult.passes });
 
     savedDesigns = rankDesigns(savedDesigns);
 
