@@ -197,10 +197,11 @@ document.getElementById("saveBtn").addEventListener("click", () => {
     const name =
         document.getElementById("designName").value.trim() || "Unnamed Design";
 
-    savedDesigns.push({ name, score });
+    const passes = Number(torque.value) >= MIN_TORQUE;
+    savedDesigns.push({ name, score, passes });
 
-    // rank designs
-    savedDesigns.sort((a, b) => b.score - a.score);
+    // passing first
+    savedDesigns.sort((a, b) => (b.passes - a.passes) || (b.score - a.score));
 
     renderSaved();
 });
@@ -215,7 +216,12 @@ function renderSaved() {
         const title = document.createElement("strong");
         title.textContent = `${i + 1}. ${d.name}`;
 
-        div.append(title, document.createElement("br"), `Score: ${d.score.toFixed(1)} / 100`);
+        const note = d.passes ? "" : " (fails torque rule)";
+        div.append(
+            title,
+            document.createElement("br"),
+            `Score: ${d.score.toFixed(1)} / 100${note}`
+        );
         designList.appendChild(div);
     });
 }
