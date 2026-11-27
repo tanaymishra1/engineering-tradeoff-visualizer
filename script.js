@@ -17,18 +17,6 @@ const ctx = canvas.getContext("2d");
 const designList = document.getElementById("designList");
 let savedDesigns = [];
 
-// rating limits
-const LOW = 1;
-const HIGH = 10;
-
-// torque rule
-const MIN_TORQUE = 5;
-const TORQUE_PENALTY = 1;
-
-// score cutoffs
-const WELL_BALANCED = 75;
-const ACCEPTABLE = 50;
-
 function updateValues() {
     document.getElementById("speedVal").textContent = speed.value;
     document.getElementById("torqueVal").textContent = torque.value;
@@ -65,22 +53,6 @@ function getWeights() {
     };
 }
 
-function scoreRange(weights) {
-    const best =
-        HIGH * weights.speed +
-        HIGH * weights.torque -
-        LOW * weights.cost;
-
-    // includes penalty
-    const worst =
-        LOW * weights.speed +
-        LOW * weights.torque -
-        HIGH * weights.cost -
-        TORQUE_PENALTY;
-
-    return { best, worst };
-}
-
 function calculate() {
     const weights = getWeights();
     if (!weights) {
@@ -91,47 +63,24 @@ function calculate() {
         return;
     }
 
-    // torque penalty
-    const penalty = torque.value < MIN_TORQUE ? -TORQUE_PENALTY : 0;
+    const result = evaluateDesign(
+        Number(speed.value),
+        Number(torque.value),
+        Number(cost.value),
+        weights
+    );
 
-    const parts = [
-        { label: "Speed", value: speed.value * weights.speed, color: "#0077b6" },
-        { label: "Torque", value: torque.value * weights.torque, color: "#00b4d8" },
-        { label: "Cost", value: -cost.value * weights.cost, color: "#adb5bd" },
-        { label: "Penalty", value: penalty, color: "#d62828" }
-    ];
-    const raw = parts.reduce((sum, part) => sum + part.value, 0);
+    drawChart([
+        { label: "Speed", value: result.parts.speed, color: "#0077b6" },
+        { label: "Torque", value: result.parts.torque, color: "#00b4d8" },
+        { label: "Cost", value: result.parts.cost, color: "#adb5bd" },
+        { label: "Penalty", value: result.parts.penalty, color: "#d62828" },
+        { label: "Total", value: result.raw, color: "#1b263b" }
+    ]);
 
-    drawChart([...parts, { label: "Total", value: raw, color: "#1b263b" }]);
-
-    // scale 0-100
-    const range = scoreRange(weights);
-    const score = (raw - range.worst) / (range.best - range.worst) * 100;
-
-    scoreOut.textContent = score.toFixed(1);
-
-    if (torque.value < MIN_TORQUE)
-        evalOut.textContent = "Fails minimum torque constraint.";
-    else if (score >= WELL_BALANCED)
-        evalOut.textContent = "Well-balanced trade-off.";
-    else if (score >= ACCEPTABLE)
-        evalOut.textContent = "Acceptable trade-off, but with limitations.";
-    else
-        evalOut.textContent = "Not optimal trade-off.";
-
-    // python rule
-    const speedRating = Number(speed.value);
-    const torqueRating = Number(torque.value);
-    const costRating = Number(cost.value);
-
-    if (speedRating > torqueRating && speedRating > costRating)
-        focusOut.textContent = "Performance-focused (speed-driven)";
-    else if (torqueRating > speedRating && torqueRating > costRating)
-        focusOut.textContent = "Power-focused (torque-driven)";
-    else if (costRating < speedRating && costRating < torqueRating)
-        focusOut.textContent = "Cost-efficient";
-    else
-        focusOut.textContent = "Balanced properties";
+    scoreOut.textContent = result.score.toFixed(1);
+    evalOut.textContent = result.evaluation;
+    focusOut.textContent = result.focus;
 }
 
 function resizeCanvas() {
@@ -200,8 +149,7 @@ document.getElementById("saveBtn").addEventListener("click", () => {
     const passes = Number(torque.value) >= MIN_TORQUE;
     savedDesigns.push({ name, score, passes });
 
-    // passing first
-    savedDesigns.sort((a, b) => (b.passes - a.passes) || (b.score - a.score));
+    savedDesigns = rankDesigns(savedDesigns);
 
     renderSaved();
 });
