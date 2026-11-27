@@ -1,6 +1,6 @@
 # Engineering Trade-Off Visualizer
 
-A web version of my [trade-off simulator](https://github.com/tanaymishra1/engineering-tradeoff-simulator). Move the sliders for speed, torque and cost, split 100 points between them, and the score and chart update right away. Saved designs get ranked by score.
+A web version of my [trade-off simulator](https://github.com/tanaymishra1/engineering-tradeoff-simulator). Move the sliders for speed, torque and cost, split 100 points between them, and the score and chart update right away. Saved designs get ranked by score, and any design that fails the torque rule goes below every design that passes.
 
 Try it: https://tanaymishra1.github.io/engineering-tradeoff-visualizer/
 
@@ -25,6 +25,16 @@ The chart shows how much speed, torque, cost and the penalty each add to or take
 The priorities can be decimals, like 33.4, 33.3 and 33.3. The total just has to be within 0.01 of 100. The chart also resizes to fit a phone screen.
 
 Saved designs reset when you reload the page.
+
+## Tests
+
+The scoring math is in scoring.js, separate from the page code, so it can be tested without a browser. The tests use the same cases and numbers as the Python version's tests, so if the two ever stop matching, one of them fails.
+
+```
+node --test
+```
+
+GitHub runs them on every push.
 
 ## What I learned
 
